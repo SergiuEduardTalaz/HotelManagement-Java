@@ -1,0 +1,1170 @@
+Index: src/main/java/ro/fortech/academy/business/services/ReservationService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.business.services;\r\n\r\nimport ro.fortech.academy.business.entities.Reservation;\r\nimport ro.fortech.academy.persistence.ReservationDAOPostgresImpl;\r\n\r\nimport java.util.List;\r\nimport java.util.stream.Collectors;\r\n\r\npublic class ReservationService {\r\n    private ReservationDAOPostgresImpl reservationDAOPostgres;\r\n\r\n    public ReservationService(ReservationDAOPostgresImpl reservationDAOPostgres) {\r\n        this.reservationDAOPostgres = reservationDAOPostgres;\r\n    }\r\n\r\n    public List<Reservation> getReservations() {\r\n        List<Reservation> list = reservationDAOPostgres.getAllReservations();\r\n        return list.stream().sorted().collect(Collectors.toList());\r\n//        return list;\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/business/services/ReservationService.java b/src/main/java/ro/fortech/academy/business/services/ReservationService.java
+--- a/src/main/java/ro/fortech/academy/business/services/ReservationService.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/business/services/ReservationService.java	(date 1690476761027)
+@@ -1,21 +1,43 @@
+ package ro.fortech.academy.business.services;
+ 
++import ro.fortech.academy.business.dto.ReservationDto;
+ import ro.fortech.academy.business.entities.Reservation;
+-import ro.fortech.academy.persistence.ReservationDAOPostgresImpl;
++import ro.fortech.academy.persistence.ReservationDAO;
+ 
+ import java.util.List;
+ import java.util.stream.Collectors;
+ 
+ public class ReservationService {
+-    private ReservationDAOPostgresImpl reservationDAOPostgres;
++    private ReservationDAO reservationDAO;
+ 
+-    public ReservationService(ReservationDAOPostgresImpl reservationDAOPostgres) {
+-        this.reservationDAOPostgres = reservationDAOPostgres;
++    public ReservationService(ReservationDAO reservationDAO) {
++        this.reservationDAO = reservationDAO;
+     }
+ 
+     public List<Reservation> getReservations() {
+-        List<Reservation> list = reservationDAOPostgres.getAllReservations();
++        List<Reservation> list = reservationDAO.getAllReservations();
+         return list.stream().sorted().collect(Collectors.toList());
+-//        return list;
++    }
++
++    public List<ReservationDto> searchReservation(String reservationId) {
++        return reservationDAO.searchForReservation(reservationId);
++    }
++
++    public Reservation createNewReservation(Reservation reservation) {
++        reservationDAO.insertReservation(reservation);
++        return reservation;
++    }
++
++    public Reservation updateReservation(Reservation reservation) {
++        reservationDAO.updateReservation(reservation);
++        return reservation;
++    }
++
++    public void disableReservation(int reservationId) {
++        reservationDAO.disableReservation(reservationId);
++    }
++
++    public List<ReservationDto> getReservationsDto() {
++        return reservationDAO.getAllDtoReservations();
+     }
+ }
+Index: src/main/java/ro/fortech/academy/presentation/reservations/ReservationModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.presentation.reservations;\r\n\r\nimport ro.fortech.academy.business.entities.Reservation;\r\n\r\nimport java.util.List;\r\n\r\npublic class ReservationModel {\r\n    private List<Reservation> reservationList;\r\n    public ReservationModel(List<Reservation> reservationList){this.reservationList= reservationList;}\r\n\r\n    public List<Reservation> getReservationList() {\r\n        return reservationList;\r\n    }\r\n\r\n    public void setReservationList(List<Reservation> reservationList) {\r\n        this.reservationList = reservationList;\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/presentation/reservations/ReservationModel.java b/src/main/java/ro/fortech/academy/presentation/reservations/ReservationModel.java
+--- a/src/main/java/ro/fortech/academy/presentation/reservations/ReservationModel.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/presentation/reservations/ReservationModel.java	(date 1690476760818)
+@@ -1,12 +1,25 @@
+ package ro.fortech.academy.presentation.reservations;
+ 
++import ro.fortech.academy.business.dto.ReservationDto;
+ import ro.fortech.academy.business.entities.Reservation;
+ 
+ import java.util.List;
+ 
+ public class ReservationModel {
+     private List<Reservation> reservationList;
+-    public ReservationModel(List<Reservation> reservationList){this.reservationList= reservationList;}
++    private List<ReservationDto> reservationDtoList;
++    public ReservationModel(List<Reservation> reservationList, List<ReservationDto> reservationDtoList){
++        this.reservationList= reservationList;
++        this.reservationDtoList = reservationDtoList;
++    }
++
++    public List<ReservationDto> getReservationDtoList() {
++        return reservationDtoList;
++    }
++
++    public void setReservationDtoList(List<ReservationDto> reservationDtoList) {
++        this.reservationDtoList = reservationDtoList;
++    }
+ 
+     public List<Reservation> getReservationList() {
+         return reservationList;
+@@ -15,4 +28,20 @@
+     public void setReservationList(List<Reservation> reservationList) {
+         this.reservationList = reservationList;
+     }
++    public void addNewReservationInDB(Reservation reservation) {reservationList.add(reservation); }
++    public void updateReservationInDB(Reservation reservation) {
++        Reservation reservationToUpdate = null;
++        for (int i = 0; i < reservationList.size(); i++) {
++            if (reservationList.get(i).getReservationId() == reservation.getReservationId()) {
++                reservationToUpdate = reservationList.get(i);
++            }
++        }
++        assert reservationToUpdate != null;
++        reservationToUpdate.setReservationId(reservation.getReservationId());
++        reservationToUpdate.setDateOfReservation(reservation.getDateOfReservation());
++        reservationToUpdate.setDateOfCheckIn(reservation.getDateOfCheckIn());
++        reservationToUpdate.setDateOfCheckOut(reservation.getDateOfCheckOut());
++        reservationToUpdate.setNumberOfPersons(reservation.getNumberOfPersons());
++        reservationToUpdate.setRoomId(reservation.getRoomId());
++    }
+ }
+Index: src/main/java/ro/fortech/academy/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy;\r\n\r\nimport ro.fortech.academy.business.services.*;\r\nimport ro.fortech.academy.persistence.*;\r\nimport ro.fortech.academy.presentation.customer.CustomerController;\r\nimport ro.fortech.academy.presentation.customer.CustomerModel;\r\nimport ro.fortech.academy.presentation.customer.CustomerView;\r\nimport ro.fortech.academy.presentation.hotel.HotelController;\r\nimport ro.fortech.academy.presentation.hotel.HotelModel;\r\nimport ro.fortech.academy.presentation.hotel.HotelView;\r\nimport ro.fortech.academy.presentation.payments.PaymentController;\r\nimport ro.fortech.academy.presentation.payments.PaymentModel;\r\nimport ro.fortech.academy.presentation.payments.PaymentView;\r\nimport ro.fortech.academy.presentation.reservations.ReservationController;\r\nimport ro.fortech.academy.presentation.reservations.ReservationModel;\r\nimport ro.fortech.academy.presentation.reservations.ReservationView;\r\nimport ro.fortech.academy.presentation.rooms.RoomController;\r\nimport ro.fortech.academy.presentation.rooms.RoomModel;\r\nimport ro.fortech.academy.presentation.rooms.RoomView;\r\n\r\npublic class Main {\r\n    public static void main(String[] args) {\r\n\r\n        HotelService hotelService = new HotelService(new HotelDaoPostgresImpl());\r\n        CustomerService customerService = new CustomerService(new CustomerDAOPostgresImpl());\r\n        RoomService roomService = new RoomService(new RoomDAOPostgresImpl());\r\n        PaymentService paymentService = new PaymentService(new PaymentDAOPostgresImpl());\r\n        ReservationService reservationService = new ReservationService(new ReservationDAOPostgresImpl());\r\n\r\n        HotelModel hotelModel = new HotelModel(hotelService.getAllHotels());\r\n        CustomerModel customerModel = new CustomerModel(customerService.getCustomers());\r\n        RoomModel roomModel = new RoomModel(roomService.getRooms());\r\n        PaymentModel paymentModel = new PaymentModel(paymentService.getPayments());\r\n        ReservationModel reservationModel = new ReservationModel(reservationService.getReservations());\r\n\r\n        HotelView hotelView = new HotelView(hotelModel.getHotelList());\r\n        CustomerView customerView = new CustomerView(customerModel.getCustomerList());\r\n        RoomView roomView = new RoomView(roomModel.getRoomList());\r\n        PaymentView paymentView = new PaymentView(paymentModel.getPaymentList());\r\n        ReservationView reservationView = new ReservationView(reservationModel.getReservationList());\r\n\r\n        HotelController controller = new HotelController(hotelView, hotelModel, hotelService);\r\n        CustomerController customerController = new CustomerController(customerModel, customerView, customerService);\r\n        RoomController roomController = new RoomController(roomModel,roomView,roomService);\r\n        PaymentController paymentController = new PaymentController(paymentModel,paymentView,paymentService);\r\n        ReservationController reservationController = new ReservationController(reservationModel,reservationView,reservationService);\r\n\r\n        hotelView.setController(controller);\r\n        customerView.setController(customerController);\r\n        roomView.setController(roomController);\r\n        paymentView.setController(paymentController);\r\n        reservationView.setController(reservationController);\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/Main.java b/src/main/java/ro/fortech/academy/Main.java
+--- a/src/main/java/ro/fortech/academy/Main.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/Main.java	(date 1690232054334)
+@@ -2,6 +2,7 @@
+ 
+ import ro.fortech.academy.business.services.*;
+ import ro.fortech.academy.persistence.*;
++import ro.fortech.academy.presentation.aggregator.AggregatorApp;
+ import ro.fortech.academy.presentation.customer.CustomerController;
+ import ro.fortech.academy.presentation.customer.CustomerModel;
+ import ro.fortech.academy.presentation.customer.CustomerView;
+@@ -20,35 +21,6 @@
+ 
+ public class Main {
+     public static void main(String[] args) {
+-
+-        HotelService hotelService = new HotelService(new HotelDaoPostgresImpl());
+-        CustomerService customerService = new CustomerService(new CustomerDAOPostgresImpl());
+-        RoomService roomService = new RoomService(new RoomDAOPostgresImpl());
+-        PaymentService paymentService = new PaymentService(new PaymentDAOPostgresImpl());
+-        ReservationService reservationService = new ReservationService(new ReservationDAOPostgresImpl());
+-
+-        HotelModel hotelModel = new HotelModel(hotelService.getAllHotels());
+-        CustomerModel customerModel = new CustomerModel(customerService.getCustomers());
+-        RoomModel roomModel = new RoomModel(roomService.getRooms());
+-        PaymentModel paymentModel = new PaymentModel(paymentService.getPayments());
+-        ReservationModel reservationModel = new ReservationModel(reservationService.getReservations());
+-
+-        HotelView hotelView = new HotelView(hotelModel.getHotelList());
+-        CustomerView customerView = new CustomerView(customerModel.getCustomerList());
+-        RoomView roomView = new RoomView(roomModel.getRoomList());
+-        PaymentView paymentView = new PaymentView(paymentModel.getPaymentList());
+-        ReservationView reservationView = new ReservationView(reservationModel.getReservationList());
+-
+-        HotelController controller = new HotelController(hotelView, hotelModel, hotelService);
+-        CustomerController customerController = new CustomerController(customerModel, customerView, customerService);
+-        RoomController roomController = new RoomController(roomModel,roomView,roomService);
+-        PaymentController paymentController = new PaymentController(paymentModel,paymentView,paymentService);
+-        ReservationController reservationController = new ReservationController(reservationModel,reservationView,reservationService);
+-
+-        hotelView.setController(controller);
+-        customerView.setController(customerController);
+-        roomView.setController(roomController);
+-        paymentView.setController(paymentController);
+-        reservationView.setController(reservationController);
++        AggregatorApp agg = new AggregatorApp();
+     }
+ }
+\ No newline at end of file
+Index: src/main/java/ro/fortech/academy/presentation/reservations/ReservationController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.presentation.reservations;\r\n\r\nimport ro.fortech.academy.business.services.ReservationService;\r\n\r\npublic class ReservationController {\r\n    private ReservationModel model;\r\n    private ReservationView view;\r\n    private ReservationService service;\r\n\r\n    public ReservationController(ReservationModel model,ReservationView view,ReservationService service){\r\n        this.model = model;\r\n        this.view = view;\r\n        this.service = service;\r\n    }\r\n\r\n    public void reservationButton(){\r\n        model.setReservationList(service.getReservations());\r\n        view.showReservations(model.getReservationList());\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/presentation/reservations/ReservationController.java b/src/main/java/ro/fortech/academy/presentation/reservations/ReservationController.java
+--- a/src/main/java/ro/fortech/academy/presentation/reservations/ReservationController.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/presentation/reservations/ReservationController.java	(date 1690477159177)
+@@ -1,11 +1,17 @@
+ package ro.fortech.academy.presentation.reservations;
+ 
++import ro.fortech.academy.business.dto.ReservationDto;
++import ro.fortech.academy.business.entities.Reservation;
+ import ro.fortech.academy.business.services.ReservationService;
+ 
++import java.util.ArrayList;
++import java.util.List;
++import java.util.stream.Collectors;
++
+ public class ReservationController {
+-    private ReservationModel model;
+-    private ReservationView view;
+-    private ReservationService service;
++    private final ReservationModel model;
++    private final ReservationView view;
++    private final ReservationService service;
+ 
+     public ReservationController(ReservationModel model,ReservationView view,ReservationService service){
+         this.model = model;
+@@ -14,7 +20,50 @@
+     }
+ 
+     public void reservationButton(){
+-        model.setReservationList(service.getReservations());
+-        view.showReservations(model.getReservationList());
++        model.setReservationDtoList(service.getReservationsDto());
++        view.showReservations(model.getReservationDtoList());
++    }
++
++    public void searchReservationsButton(String reservationId) {
++        List<ReservationDto> searchedReservation = service.searchReservation(reservationId);
++        if (searchedReservation != null) {
++            model.setReservationDtoList(searchedReservation);
++            view.showReservations(model.getReservationDtoList());
++        }
++    }
++
++    public void createNewReservation(Reservation reservation) {
++        model.addNewReservationInDB(service.createNewReservation(reservation));
+     }
++
++    public boolean isReservationIdUnique(int reservationId) {
++        // Check if the reservationId is already present in the reservationList
++        for (Reservation reservation : model.getReservationList()) {
++            if (reservation.getReservationId() == reservationId) {
++                return false; // The reservationId is not unique
++            }
++        }
++        return true; // The reservationId is unique
++    }
++    /*private Date parseDate(String dateStr) {
++        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
++        //try {
++        //    return dateFormat.parse(dateStr);
++        //} catch (ParseException e) {
++        //    e.printStackTrace();
++        //    return null;
++        //}
++    }*/
++
++    public void updateReservation(Reservation reservation) {
++        model.updateReservationInDB(service.updateReservation(reservation));
++    }
++
++    /*public void disableReservation(int reservationId) {
++        service.disableReservation(reservationId);
++        List<ReservationDto> reservationList = new ArrayList<>(model.getReservationList());
++        List<Reservation> newReservationList = reservationList.stream().filter((ReservationDto reservation) -> reservation.getReservationId() == reservationId).collect(Collectors.toList());
++        model.setReservationList(newReservationList);
++        view.showReservations(model.getReservationDtoList());
++    }*/
+ }
+Index: src/main/java/ro/fortech/academy/business/entities/Reservation.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.business.entities;\r\n\r\nimport java.util.Date;\r\nimport java.util.Objects;\r\n\r\npublic class Reservation implements Comparable<Reservation> {\r\n\r\n    private int reservationId;\r\n    private Date dateOfReservation;\r\n\r\n    private Date dateOfCheckIn;\r\n\r\n    private Date dateOfCheckOut;\r\n\r\n    private int numberOfPersons;\r\n\r\n    private int roomId;\r\n\r\n    public Reservation(int reservationId, Date dateOfReservation, Date dateOfCheckIn, Date dateOfCheckOut, int numberOfPersons, int roomId) {\r\n        this.reservationId = reservationId;\r\n        this.dateOfReservation = dateOfReservation;\r\n        this.dateOfCheckIn = dateOfCheckIn;\r\n        this.dateOfCheckOut = dateOfCheckOut;\r\n        this.numberOfPersons = numberOfPersons;\r\n        this.roomId = roomId;\r\n    }\r\n\r\n    public int getReservationId() {\r\n        return reservationId;\r\n    }\r\n\r\n    public void setReservationId(int reservationId) {\r\n        this.reservationId = reservationId;\r\n    }\r\n\r\n    public Date getDateOfReservation() {\r\n        return dateOfReservation;\r\n    }\r\n\r\n    public void setDateOfReservation(Date dateOfReservation) {\r\n        this.dateOfReservation = dateOfReservation;\r\n    }\r\n\r\n    public Date getDateOfCheckIn() {\r\n        return dateOfCheckIn;\r\n    }\r\n\r\n    public void setDateOfCheckIn(Date dateOfCheckIn) {\r\n        this.dateOfCheckIn = dateOfCheckIn;\r\n    }\r\n\r\n    public Date getDateOfCheckOut() {\r\n        return dateOfCheckOut;\r\n    }\r\n\r\n    public void setDateOfCheckOut(Date dateOfCheckOut) {\r\n        this.dateOfCheckOut = dateOfCheckOut;\r\n    }\r\n\r\n    public int getNumberOfPersons() {\r\n        return numberOfPersons;\r\n    }\r\n\r\n    public void setNumberOfPersons(int numberOfPersons) {\r\n        this.numberOfPersons = numberOfPersons;\r\n    }\r\n\r\n    public int getRoomId() {\r\n        return roomId;\r\n    }\r\n\r\n    public void setRoomId(int roomId) {\r\n        this.roomId = roomId;\r\n    }\r\n\r\n    @Override\r\n    public boolean equals(Object o) {\r\n        if (this == o) return true;\r\n        if (o == null || getClass() != o.getClass()) return false;\r\n        Reservation that = (Reservation) o;\r\n        return numberOfPersons == that.numberOfPersons && roomId == that.roomId && Objects.equals(reservationId, that.reservationId) && Objects.equals(dateOfReservation, that.dateOfReservation) && Objects.equals(dateOfCheckIn, that.dateOfCheckIn) && Objects.equals(dateOfCheckOut, that.dateOfCheckOut);\r\n    }\r\n\r\n    @Override\r\n    public int hashCode() {\r\n        return Objects.hash(reservationId, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, roomId);\r\n    }\r\n\r\n    @Override\r\n    public String toString() {\r\n        return \"Reservation = {\" +\r\n                \"reservationId='\" + reservationId + '\\'' +\r\n                \", dateOfReservation=\" + dateOfReservation +\r\n                \", dateOfCheckIn=\" + dateOfCheckIn +\r\n                \", dateOfCheckOut=\" + dateOfCheckOut +\r\n                \", numberOfPersons=\" + numberOfPersons +\r\n                \", roomId=\" + roomId +\r\n                '}';\r\n    }\r\n\r\n    @Override\r\n    public int compareTo(Reservation o) {\r\n        return Integer.compare(this.reservationId, o.reservationId);\r\n    }\r\n}\r\n\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/business/entities/Reservation.java b/src/main/java/ro/fortech/academy/business/entities/Reservation.java
+--- a/src/main/java/ro/fortech/academy/business/entities/Reservation.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/business/entities/Reservation.java	(date 1690471960300)
+@@ -16,13 +16,19 @@
+ 
+     private int roomId;
+ 
+-    public Reservation(int reservationId, Date dateOfReservation, Date dateOfCheckIn, Date dateOfCheckOut, int numberOfPersons, int roomId) {
++    private boolean isVisible;
++
++    public Reservation(int reservationId, Date dateOfReservation, Date dateOfCheckIn, Date dateOfCheckOut, int numberOfPersons, int roomId, boolean isVisible) {
+         this.reservationId = reservationId;
+         this.dateOfReservation = dateOfReservation;
+         this.dateOfCheckIn = dateOfCheckIn;
+         this.dateOfCheckOut = dateOfCheckOut;
+         this.numberOfPersons = numberOfPersons;
+         this.roomId = roomId;
++        this.isVisible = isVisible;
++    }
++
++    public Reservation(Date dateOfCheckIn, Date dateOfCheckOut) {
+     }
+ 
+     public int getReservationId() {
+@@ -73,6 +79,14 @@
+         this.roomId = roomId;
+     }
+ 
++    public boolean isVisible() {
++        return isVisible;
++    }
++
++    public void setVisible(boolean visible) {
++        isVisible = visible;
++    }
++
+     @Override
+     public boolean equals(Object o) {
+         if (this == o) return true;
+Index: src/main/java/ro/fortech/academy/persistence/ReservationDAOPostgresImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.persistence;\r\n\r\nimport ro.fortech.academy.business.entities.Reservation;\r\nimport ro.fortech.academy.util.DBUtil;\r\n\r\nimport java.sql.Connection;\r\nimport java.sql.ResultSet;\r\nimport java.sql.SQLException;\r\nimport java.sql.Statement;\r\nimport java.util.ArrayList;\r\nimport java.util.Date;\r\nimport java.util.List;\r\n\r\npublic class ReservationDAOPostgresImpl {\r\n    public List<Reservation> getAllReservations() {\r\n        List<Reservation> reservations = new ArrayList<>();\r\n        Connection connection = null;\r\n        Statement statement = null;\r\n        ResultSet rs = null;\r\n        try {\r\n            connection = DBUtil.getConnection();\r\n            statement = connection.createStatement();\r\n            rs = statement.executeQuery(\"SELECT * from reservations\");\r\n            while (rs.next()) {\r\n                Reservation reservation = getAllReservationsFromResultSet(rs);\r\n                reservations.add(reservation);\r\n            }\r\n        } catch (SQLException e) {\r\n            throw new RuntimeException(e);\r\n        } finally {\r\n            DBUtil.closeConnection(connection);\r\n        }\r\n        return reservations;\r\n    }\r\n\r\n    private Reservation getAllReservationsFromResultSet(ResultSet resultSet) throws SQLException {\r\n        int id = resultSet.getInt(1);\r\n        Date dateOfReservation = resultSet.getDate(2);\r\n        Date dateOfCheckIn = resultSet.getDate(3);\r\n        Date dateOfCheckOut = resultSet.getDate(4);\r\n        int numberOfPersons = resultSet.getInt(5);\r\n        int roomId = resultSet.getInt(6);\r\n        Reservation room = new Reservation(id, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, roomId);\r\n\r\n        return room;\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/persistence/ReservationDAOPostgresImpl.java b/src/main/java/ro/fortech/academy/persistence/ReservationDAOPostgresImpl.java
+--- a/src/main/java/ro/fortech/academy/persistence/ReservationDAOPostgresImpl.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/persistence/ReservationDAOPostgresImpl.java	(date 1690476760910)
+@@ -1,17 +1,15 @@
+ package ro.fortech.academy.persistence;
+ 
++import ro.fortech.academy.business.dto.ReservationDto;
+ import ro.fortech.academy.business.entities.Reservation;
+ import ro.fortech.academy.util.DBUtil;
+ 
+-import java.sql.Connection;
+-import java.sql.ResultSet;
+-import java.sql.SQLException;
+-import java.sql.Statement;
++import java.sql.*;
+ import java.util.ArrayList;
+ import java.util.Date;
+ import java.util.List;
+ 
+-public class ReservationDAOPostgresImpl {
++public class ReservationDAOPostgresImpl implements ReservationDAO{
+     public List<Reservation> getAllReservations() {
+         List<Reservation> reservations = new ArrayList<>();
+         Connection connection = null;
+@@ -20,7 +18,7 @@
+         try {
+             connection = DBUtil.getConnection();
+             statement = connection.createStatement();
+-            rs = statement.executeQuery("SELECT * from reservations");
++            rs = statement.executeQuery("SELECT * from reservations WHERE IsVisible = true");
+             while (rs.next()) {
+                 Reservation reservation = getAllReservationsFromResultSet(rs);
+                 reservations.add(reservation);
+@@ -33,6 +31,26 @@
+         return reservations;
+     }
+ 
++    public List<ReservationDto> getAllDtoReservations() {
++        List<ReservationDto> reservations = new ArrayList<>();
++        Connection connection = null;
++        Statement statement = null;
++        ResultSet rs = null;
++        try {
++            connection = DBUtil.getConnection();
++            statement = connection.createStatement();
++            rs = statement.executeQuery("SELECT reservations.reservationId, reservations.dateOfReservation, reservations.dateOfCheckIn, reservations.dateOfCheckOut, reservations.numberOfPersons, rooms.numberOfRoom, rooms.price, rooms.isVisible from reservations JOIN rooms ON reservations.roomID = rooms.id where reservations.isVisible = true");
++            while (rs.next()) {
++                ReservationDto reservation = getReservationsDtoFromResultSet(rs);
++                reservations.add(reservation);
++            }
++        } catch (SQLException e) {
++            throw new RuntimeException(e);
++        } finally {
++            DBUtil.closeConnection(connection);
++        }
++        return reservations;
++    }
+     private Reservation getAllReservationsFromResultSet(ResultSet resultSet) throws SQLException {
+         int id = resultSet.getInt(1);
+         Date dateOfReservation = resultSet.getDate(2);
+@@ -40,8 +58,116 @@
+         Date dateOfCheckOut = resultSet.getDate(4);
+         int numberOfPersons = resultSet.getInt(5);
+         int roomId = resultSet.getInt(6);
+-        Reservation room = new Reservation(id, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, roomId);
++        boolean isVisible = resultSet.getBoolean(7);
++        Reservation reservation = new Reservation(id, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, roomId, isVisible);
++
++        return reservation;
++    }
++
++    private ReservationDto getReservationsDtoFromResultSet(ResultSet resultSet) throws SQLException {
++        int id = resultSet.getInt(1);
++        Date dateOfReservation = resultSet.getDate(2);
++        Date dateOfCheckIn = resultSet.getDate(3);
++        Date dateOfCheckOut = resultSet.getDate(4);
++        int numberOfPersons = resultSet.getInt(5);
++        String numberOfRoom = resultSet.getString(6);
++        int price = resultSet.getInt(7);
++        boolean isVisible = resultSet.getBoolean(8);
++        ReservationDto reservationdto = new ReservationDto(id, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, numberOfRoom, price, isVisible);
++
++        return reservationdto;
++    }
++
++
++
++
++    public List<ReservationDto> searchForReservation(String reservationId) {
++        List<ReservationDto> reservations = new ArrayList<>();
++        Connection connection = null;
++        PreparedStatement statement;
++        ResultSet rs = null;
++        try {
++            connection = DBUtil.getConnection();
++            String searchStringSql = "SELECT reservations.reservationId, reservations.dateOfReservation, reservations.dateOfCheckIn, reservations.dateOfCheckOut, reservations.numberOfPersons, rooms.price from reservations JOIN rooms ON reservations.roomID = rooms.id where reservations.reservationId = ? ";
++            statement = connection.prepareStatement(searchStringSql);
++            statement.setString(1, reservationId);
++            rs = statement.executeQuery();
++            while (rs.next()) {
++                ReservationDto reservationDto = getReservationsDtoFromResultSet(rs);
++                reservations.add(reservationDto);
++            }
++        } catch (SQLException e) {
++            throw new RuntimeException(e);
++        } finally {
++            DBUtil.closeConnection(connection);
++        }
++        return reservations;
++    }
+ 
+-        return room;
++    public void insertReservation(Reservation reservation) {
++        Connection connection = null;
++        PreparedStatement statement = null;
++
++        try {
++            connection = DBUtil.getConnection();
++            String createReservation = "INSERT INTO reservations (reservationId, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, roomId, isVisible) VALUES (?, ?, ?, ?, ?, ?, true)";
++            statement = connection.prepareStatement(createReservation);
++            setReservationStatement(statement, reservation);
++            statement.executeUpdate();
++        } catch (SQLException e) {
++            throw new RuntimeException(e);
++        } finally {
++            DBUtil.closeConnection(connection);
++        }
++    }
++
++    private void setReservationStatement(PreparedStatement statement, Reservation reservation) throws SQLException {
++        statement.setInt(1, reservation.getReservationId());
++        statement.setDate(2, new java.sql.Date(reservation.getDateOfReservation().getTime()));
++        statement.setDate(3, new java.sql.Date(reservation.getDateOfCheckIn().getTime()));
++        statement.setDate(4, new java.sql.Date(reservation.getDateOfCheckOut().getTime()));
++        statement.setInt(5, reservation.getNumberOfPersons());
++        statement.setInt(6, reservation.getRoomId());
++    }
++
++
++
++    public void updateReservation(Reservation reservation) {
++        Connection connection = null;
++        PreparedStatement statement = null;
++        try {
++            connection = DBUtil.getConnection();
++            String sql = "UPDATE reservations SET dateOfReservation = ?, dateOfCheckIn = ?, dateOfCheckOut = ?, numberOfPersons = ?, roomId = ? WHERE reservationId = ?";
++            statement = connection.prepareStatement(sql);
++            statement.setDate(1, new java.sql.Date(reservation.getDateOfReservation().getTime()));
++            statement.setDate(2, new java.sql.Date(reservation.getDateOfCheckIn().getTime()));
++            statement.setDate(3, new java.sql.Date(reservation.getDateOfCheckOut().getTime()));
++            statement.setInt(4, reservation.getNumberOfPersons());
++            statement.setInt(5, reservation.getRoomId());
++            statement.setInt(6, reservation.getReservationId());
++            statement.executeUpdate();
++        } catch (SQLException e) {
++            throw new RuntimeException(e);
++        } finally {
++            DBUtil.closeConnection(connection);
++        }
++    }
++
++    public void disableReservation(int reservationId) {
++        Connection connection = null;
++        PreparedStatement statement;
++        try {
++            connection = DBUtil.getConnection();
++            String delete = "UPDATE reservations SET IsVisible = false WHERE ID =?";
++            statement = connection.prepareStatement(delete);
++            statement.setInt(1, reservationId);
++
++            statement.executeUpdate();
++
++        } catch (SQLException e) {
++            throw new RuntimeException(e);
++        } finally {
++            DBUtil.closeConnection(connection);
++        }
+     }
+ }
+Index: src/main/java/ro/fortech/academy/presentation/reservations/ReservationView.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.presentation.reservations;\r\n\r\nimport ro.fortech.academy.business.entities.Reservation;\r\n\r\nimport javax.swing.*;\r\nimport javax.swing.table.DefaultTableModel;\r\nimport java.awt.*;\r\nimport java.util.List;\r\n\r\npublic class ReservationView extends JFrame {\r\n    private DefaultTableModel tableModel;\r\n    private ReservationController controller;\r\n\r\n    public ReservationView(List<Reservation> reservationList) {\r\n        super(\"Reservation Window\");\r\n\r\n        JPanel content = new JPanel();\r\n        JScrollPane pane = getReservationTable();\r\n\r\n        JMenuBar menuBar = new JMenuBar();\r\n        JMenu menu = new JMenu(\"Reservation Button\");\r\n\r\n        JMenuItem printReservationData = new JMenuItem(\"Show reservations\");\r\n\r\n        menu.add(printReservationData);\r\n\r\n        printReservationData.addActionListener(e -> controller.reservationButton());\r\n\r\n        content.add(pane);\r\n        content.add(menuBar);\r\n        menuBar.add(menu);\r\n\r\n        this.setJMenuBar(menuBar);\r\n        this.setContentPane(content);\r\n        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);\r\n        this.setVisible(true);\r\n        this.pack();\r\n    }\r\n\r\n    public JScrollPane getReservationTable() {\r\n        String[] header = {\"ReservationID\", \"Date of Reservation\", \"Date of Check-in\", \"Date of Check-out\", \"Number of people\", \"RoomID\"};\r\n        tableModel = new DefaultTableModel(header, 0);\r\n        JTable table = new JTable(tableModel);\r\n        table.setPreferredScrollableViewportSize(new Dimension(1000, 400));\r\n        table.getColumnModel().getColumn(1).setPreferredWidth(300);\r\n        JScrollPane pane = new JScrollPane(table);\r\n        return pane;\r\n    }\r\n\r\n    public ReservationController getController() {\r\n        return controller;\r\n    }\r\n\r\n    public void setController(ReservationController controller) {\r\n        this.controller = controller;\r\n    }\r\n\r\n    public void showReservations(List<Reservation> reservationList) {\r\n        tableModel.setRowCount(0);\r\n        for (Reservation reservation : reservationList) {\r\n            tableModel.addRow(new Object[]{reservation.getReservationId(), reservation.getDateOfReservation(), reservation.getDateOfCheckIn(), reservation.getDateOfCheckOut(), reservation.getNumberOfPersons(), reservation.getRoomId()});\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/presentation/reservations/ReservationView.java b/src/main/java/ro/fortech/academy/presentation/reservations/ReservationView.java
+--- a/src/main/java/ro/fortech/academy/presentation/reservations/ReservationView.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/presentation/reservations/ReservationView.java	(date 1690477802309)
+@@ -1,15 +1,26 @@
+ package ro.fortech.academy.presentation.reservations;
+ 
++import ro.fortech.academy.business.dto.ReservationDto;
+ import ro.fortech.academy.business.entities.Reservation;
++import ro.fortech.academy.business.services.ReservationService;
++import ro.fortech.academy.presentation.aggregator.AggregatorApp;
+ 
+ import javax.swing.*;
+ import javax.swing.table.DefaultTableModel;
+ import java.awt.*;
++import java.text.ParseException;
++import java.text.SimpleDateFormat;
++import java.util.Date;
+ import java.util.List;
++import java.util.Random;
+ 
+ public class ReservationView extends JFrame {
+     private DefaultTableModel tableModel;
+     private ReservationController controller;
++    private ReservationService service;
++    private JButton addButton;
++    private JButton editButton;
++    private JButton deleteButton;
+ 
+     public ReservationView(List<Reservation> reservationList) {
+         super("Reservation Window");
+@@ -17,15 +28,37 @@
+         JPanel content = new JPanel();
+         JScrollPane pane = getReservationTable();
+ 
++        ImageIcon reservationIcon = new ImageIcon("src/resources/booking.png");
++        setIconImage(reservationIcon.getImage());
++
+         JMenuBar menuBar = new JMenuBar();
+         JMenu menu = new JMenu("Reservation Button");
+ 
+-        JMenuItem printReservationData = new JMenuItem("Show reservations");
++        JButton buttonBack = new JButton("Back");
++        content.add(buttonBack);
++        buttonBack.addActionListener(e -> handleClickBackButton());
+ 
++        JMenuItem printReservationData = new JMenuItem("Get reservations");
+         menu.add(printReservationData);
+-
+         printReservationData.addActionListener(e -> controller.reservationButton());
+ 
++        JMenuItem searchReservationItem = new JMenuItem("Search Reservation");
++        menu.add(searchReservationItem);
++        searchReservationItem.addActionListener(e -> searchReservation());
++
++
++        JMenuItem insertReservationItem = new JMenuItem("Insert Reservation");
++        menu.add(insertReservationItem);
++        insertReservationItem.addActionListener(e -> createReservationButton());
++
++        JMenuItem updateReservationItem = new JMenuItem("Update Reservation");
++        menu.add(updateReservationItem);
++        updateReservationItem.addActionListener(e -> updateReservationButton());
++
++        JMenuItem deleteReservationItem = new JMenuItem("Disable Reservation");
++        menu.add(deleteReservationItem);
++        deleteReservationItem.addActionListener(e -> disableReservation());
++
+         content.add(pane);
+         content.add(menuBar);
+         menuBar.add(menu);
+@@ -33,12 +66,18 @@
+         this.setJMenuBar(menuBar);
+         this.setContentPane(content);
+         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
++        this.setLocationRelativeTo(null);
+         this.setVisible(true);
+         this.pack();
+     }
+ 
++    private void handleClickBackButton() {
++        AggregatorApp aggregatorApp = new AggregatorApp();
++        aggregatorApp.setVisible(true);
++        this.dispose();
++    }
+     public JScrollPane getReservationTable() {
+-        String[] header = {"ReservationID", "Date of Reservation", "Date of Check-in", "Date of Check-out", "Number of people", "RoomID"};
++        String[] header = {"Reservation ID", "Date of Reservation", "Date of Check-in", "Date of Check-out", "Number of people", "Room Number", "Price", "Room Number"};
+         tableModel = new DefaultTableModel(header, 0);
+         JTable table = new JTable(tableModel);
+         table.setPreferredScrollableViewportSize(new Dimension(1000, 400));
+@@ -55,10 +94,143 @@
+         this.controller = controller;
+     }
+ 
+-    public void showReservations(List<Reservation> reservationList) {
++    public void searchReservation() {
++        String reservationIdInput = JOptionPane.showInputDialog(this, "Enter Reservation ID:");
++        if (reservationIdInput != null && !reservationIdInput.isEmpty()) {
++            controller.searchReservationsButton(reservationIdInput);
++        }
++    }
++
++    private JTextField[] createReservationTextFields() {
++        JTextField reservationIdField = new JTextField();
++        JTextField dateOfReservationField = new JTextField();
++        JTextField dateOfCheckInField = new JTextField();
++        JTextField dateOfCheckOutField = new JTextField();
++        JTextField numberOfPersonsField = new JTextField();
++        JTextField roomIdField = new JTextField();
++
++        return new JTextField[]{reservationIdField, dateOfReservationField, dateOfCheckInField, dateOfCheckOutField, numberOfPersonsField, roomIdField};
++    }
++
++    public void updateReservationButton() {
++        JTextField[] fields = createReservationTextFields();
++
++        Object[] dialogFields = { "Date of Check-in:", fields[0], "Date of Check-out:", fields[1]};
++
++        int option = JOptionPane.showConfirmDialog(null, dialogFields, "Update Reservation", JOptionPane.OK_CANCEL_OPTION);
++
++        if (option == JOptionPane.OK_OPTION) {
++            try {
++                Date dateOfCheckIn = parseDate(fields[2].getText());
++                Date dateOfCheckOut = parseDate(fields[3].getText());
++                if (String.valueOf(dateOfCheckIn).isEmpty() || String.valueOf(dateOfCheckOut).isEmpty()) {
++                    JOptionPane.showMessageDialog(this, "Please fill in all the required fields!", "Incomplete Fields", JOptionPane.WARNING_MESSAGE);
++                } else {
++                    boolean isVisible = true;
++                    Reservation updatedReservation = new Reservation(dateOfCheckIn, dateOfCheckOut);
++                    controller.updateReservation(updatedReservation);
++
++                    JOptionPane.showMessageDialog(this, "Reservation updated successfully!", "Updating reservation", JOptionPane.INFORMATION_MESSAGE);
++                }
++            } catch (NumberFormatException e) {
++                JOptionPane.showMessageDialog(this, "Invalid input! Please enter valid values for Date of Check-in and Date of Check-out.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
++            }
++        }
++    }
++    public void createReservationButton() {
++        JTextField reservationIdField = new JTextField();
++        JTextField dateOfReservationField = new JTextField();
++        JTextField dateOfCheckInField = new JTextField();
++        JTextField dateOfCheckOutField = new JTextField();
++        JTextField numberOfPersonsField = new JTextField();
++        JTextField roomIdField = new JTextField();
++
++        Object[] dialogFields = {
++                "Reservation ID:", reservationIdField,
++                "Date of Reservation:", dateOfReservationField,
++                "Date of Check-in:", dateOfCheckInField,
++                "Date of Check-out:", dateOfCheckOutField,
++                "Number of Persons:", numberOfPersonsField,
++                "Room ID:", roomIdField
++        };
++
++        int option = JOptionPane.showConfirmDialog(null, dialogFields, "Create Reservation", JOptionPane.OK_CANCEL_OPTION);
++
++        if (option == JOptionPane.OK_OPTION) {
++            try {
++                int reservationId = generateRandomReservationId();
++            Date dateOfReservation = parseDate(dateOfReservationField.getText());
++            Date dateOfCheckIn = parseDate(dateOfCheckInField.getText());
++            Date dateOfCheckOut = parseDate(dateOfCheckOutField.getText());
++            int numberOfPersons = Integer.parseInt(numberOfPersonsField.getText());
++            int roomId = Integer.parseInt(roomIdField.getText());
++
++                if ((reservationIdField.getText().isEmpty() || dateOfReservationField.getText().isEmpty()
++                        || dateOfCheckInField.getText().isEmpty() || dateOfCheckOutField.getText().isEmpty()
++                        || numberOfPersonsField.getText().isEmpty() || roomIdField.getText().isEmpty())) {
++                    JOptionPane.showMessageDialog(this, "Please fill in all the required fields!", "Incomplete Fields", JOptionPane.WARNING_MESSAGE);
++                } else {
++                    boolean isVisible = true;
++                    Reservation newReservation = new Reservation(reservationId, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, roomId, isVisible);
++                    service.createNewReservation(newReservation);
++
++                    JOptionPane.showMessageDialog(this, "Reservation added successfully!", "Adding reservation", JOptionPane.INFORMATION_MESSAGE);
++                }
++            } catch (NumberFormatException e) {
++                JOptionPane.showMessageDialog(this, "Invalid input! Please enter valid numeric values for Reservation ID, NumberOf Persons, and Room ID.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
++            }
++        }
++    }
++
++    private Date parseDate(String dateStr) {
++        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
++        try {
++            return dateFormat.parse(dateStr);
++        } catch (ParseException e) {
++            e.printStackTrace();
++            return null;
++        }
++    }
++
++    private int generateRandomReservationId() {
++        Random random = new Random();
++        int maxAttempts = 10000; // Maximum number of attempts to find a unique reservationId
++        int attempts = 0;
++
++        while (attempts < maxAttempts) {
++            int reservationId = random.nextInt(10000);
++
++            if (controller.isReservationIdUnique(reservationId)) {
++                return reservationId; // Found a unique reservationId, return it
++            }
++
++            attempts++;
++        }
++
++        // Unique reservationId couldn't be generated, show a warning message
++        JOptionPane.showMessageDialog(this, "Unable to generate a unique Reservation ID after multiple attempts. Please try again later!", "Error Reservation ID", JOptionPane.ERROR_MESSAGE);
++        throw new IllegalStateException("Unable to generate a unique Reservation ID after multiple attempts.");
++    }
++
++    public void disableReservation() {
++        String reservationIdInput = JOptionPane.showInputDialog(this, "Enter the Reservation ID:");
++        try {
++            if (reservationIdInput != null && !reservationIdInput.isEmpty()) {
++                int reservationId = Integer.parseInt(reservationIdInput);
++                controller.disableReservation(reservationId);
++                JOptionPane.showMessageDialog(this, "Reservation disabled successfully!", "Disabling reservation", JOptionPane.INFORMATION_MESSAGE);
++            } else {
++                JOptionPane.showMessageDialog(this, "Please fill in all the required fields!", "Incomplete Fields", JOptionPane.WARNING_MESSAGE);
++            }
++        } catch (NumberFormatException e) {
++            JOptionPane.showMessageDialog(this, "Invalid input! Please enter a valid Reservation ID.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
++        }
++    }
++
++    public void showReservations(List<ReservationDto> reservationList) {
+         tableModel.setRowCount(0);
+-        for (Reservation reservation : reservationList) {
+-            tableModel.addRow(new Object[]{reservation.getReservationId(), reservation.getDateOfReservation(), reservation.getDateOfCheckIn(), reservation.getDateOfCheckOut(), reservation.getNumberOfPersons(), reservation.getRoomId()});
++        for (ReservationDto reservationDto : reservationList) {
++            tableModel.addRow(new Object[]{reservationDto.getReservationId(), reservationDto.getDateOfReservation(), reservationDto.getDateOfCheckIn(), reservationDto.getDateOfCheckOut(), reservationDto.getNumberOfPersons(), reservationDto.getRoomNumber(), reservationDto.getPrice()});
+         }
+     }
+ }
+Index: src/main/java/ro/fortech/academy/presentation/rooms/RoomModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.presentation.rooms;\r\n\r\nimport ro.fortech.academy.business.entities.Room;\r\n\r\nimport java.util.List;\r\n\r\npublic class RoomModel {\r\n    private List<Room> roomList;\r\n\r\n    public RoomModel(List<Room> roomList){this.roomList = roomList;}\r\n\r\n    public List<Room> getRoomList() {\r\n        return roomList;\r\n    }\r\n\r\n    public void setRoomList(List<Room> roomList) {\r\n        this.roomList = roomList;\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/presentation/rooms/RoomModel.java b/src/main/java/ro/fortech/academy/presentation/rooms/RoomModel.java
+--- a/src/main/java/ro/fortech/academy/presentation/rooms/RoomModel.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/presentation/rooms/RoomModel.java	(date 1690233644407)
+@@ -7,7 +7,7 @@
+ public class RoomModel {
+     private List<Room> roomList;
+ 
+-    public RoomModel(List<Room> roomList){this.roomList = roomList;}
++    public RoomModel(List<Room> roomList, Object availableRooms){this.roomList = roomList;}
+ 
+     public List<Room> getRoomList() {
+         return roomList;
+Index: src/main/java/ro/fortech/academy/business/services/RoomService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.business.services;\r\n\r\nimport ro.fortech.academy.business.entities.Room;\r\nimport ro.fortech.academy.persistence.RoomDAOPostgresImpl;\r\n\r\nimport java.util.List;\r\nimport java.util.stream.Collectors;\r\n\r\npublic class RoomService {\r\n    private RoomDAOPostgresImpl roomDAOPostgres;\r\n    public RoomService(RoomDAOPostgresImpl roomDAOPostgres) {\r\n        this.roomDAOPostgres = roomDAOPostgres;\r\n    }\r\n\r\n    public List<Room> getRooms() {\r\n        List<Room> list = roomDAOPostgres.getAllRooms();\r\n        return list.stream().sorted().collect(Collectors.toList());\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/business/services/RoomService.java b/src/main/java/ro/fortech/academy/business/services/RoomService.java
+--- a/src/main/java/ro/fortech/academy/business/services/RoomService.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/business/services/RoomService.java	(date 1690233644461)
+@@ -16,4 +16,8 @@
+         List<Room> list = roomDAOPostgres.getAllRooms();
+         return list.stream().sorted().collect(Collectors.toList());
+     }
++
++    public Object getAvailableRooms() {
++        return null;
++    }
+ }
+Index: src/main/java/ro/fortech/academy/persistence/ReservationDAO.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/persistence/ReservationDAO.java b/src/main/java/ro/fortech/academy/persistence/ReservationDAO.java
+new file mode 100644
+--- /dev/null	(date 1690476760942)
++++ b/src/main/java/ro/fortech/academy/persistence/ReservationDAO.java	(date 1690476760942)
+@@ -0,0 +1,15 @@
++package ro.fortech.academy.persistence;
++
++import ro.fortech.academy.business.dto.ReservationDto;
++import ro.fortech.academy.business.entities.Reservation;
++
++import java.util.List;
++
++public interface ReservationDAO {
++    public List<Reservation> getAllReservations();
++    public List<ReservationDto> getAllDtoReservations();
++    public List<ReservationDto> searchForReservation(String reservationId);
++    public void insertReservation(Reservation reservation);
++    public void updateReservation(Reservation reservation);
++    public void disableReservation(int reservationId);
++}
+Index: src/main/java/ro/fortech/academy/business/dto/ReservationDto.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/business/dto/ReservationDto.java b/src/main/java/ro/fortech/academy/business/dto/ReservationDto.java
+new file mode 100644
+--- /dev/null	(date 1690476912930)
++++ b/src/main/java/ro/fortech/academy/business/dto/ReservationDto.java	(date 1690476912930)
+@@ -0,0 +1,127 @@
++package ro.fortech.academy.business.dto;
++
++import java.util.Date;
++import java.util.Objects;
++
++public class ReservationDto implements Comparable{
++    private int reservationId;
++    private Date dateOfReservation;
++
++    private Date dateOfCheckIn;
++
++    private Date dateOfCheckOut;
++
++    private int numberOfPersons;
++
++    private String roomNumber;
++    private int price;
++
++    private boolean isVisible;
++
++    public ReservationDto(int reservationId, Date dateOfReservation, Date dateOfCheckIn, Date dateOfCheckOut, int numberOfPersons, String roomNumber, int price, boolean isVisible) {
++        this.reservationId = reservationId;
++        this.dateOfReservation = dateOfReservation;
++        this.dateOfCheckIn = dateOfCheckIn;
++        this.dateOfCheckOut = dateOfCheckOut;
++        this.numberOfPersons = numberOfPersons;
++        this.roomNumber = roomNumber;
++        this.price = price;
++        this.isVisible = isVisible;
++    }
++
++    public int getReservationId() {
++        return reservationId;
++    }
++
++    public void setReservationId(int reservationId) {
++        this.reservationId = reservationId;
++    }
++
++    public Date getDateOfReservation() {
++        return dateOfReservation;
++    }
++
++    public void setDateOfReservation(Date dateOfReservation) {
++        this.dateOfReservation = dateOfReservation;
++    }
++
++    public Date getDateOfCheckIn() {
++        return dateOfCheckIn;
++    }
++
++    public void setDateOfCheckIn(Date dateOfCheckIn) {
++        this.dateOfCheckIn = dateOfCheckIn;
++    }
++
++    public Date getDateOfCheckOut() {
++        return dateOfCheckOut;
++    }
++
++    public void setDateOfCheckOut(Date dateOfCheckOut) {
++        this.dateOfCheckOut = dateOfCheckOut;
++    }
++
++    public int getNumberOfPersons() {
++        return numberOfPersons;
++    }
++
++    public void setNumberOfPersons(int numberOfPersons) {
++        this.numberOfPersons = numberOfPersons;
++    }
++
++    public String getRoomNumber() {
++        return roomNumber;
++    }
++
++    public void setRoomNumber(String roomNumber) {
++        this.roomNumber = roomNumber;
++    }
++
++    public int getPrice() {
++        return price;
++    }
++
++    public void setPrice(int price) {
++        this.price = price;
++    }
++
++    public boolean isVisible() {
++        return isVisible;
++    }
++
++    public void setVisible(boolean visible) {
++        isVisible = visible;
++    }
++
++    @Override
++    public boolean equals(Object o) {
++        if (this == o) return true;
++        if (o == null || getClass() != o.getClass()) return false;
++        ReservationDto that = (ReservationDto) o;
++        return reservationId == that.reservationId && numberOfPersons == that.numberOfPersons && price == that.price && isVisible == that.isVisible && Objects.equals(dateOfReservation, that.dateOfReservation) && Objects.equals(dateOfCheckIn, that.dateOfCheckIn) && Objects.equals(dateOfCheckOut, that.dateOfCheckOut) && Objects.equals(roomNumber, that.roomNumber);
++    }
++
++    @Override
++    public int hashCode() {
++        return Objects.hash(reservationId, dateOfReservation, dateOfCheckIn, dateOfCheckOut, numberOfPersons, roomNumber, price, isVisible);
++    }
++
++    @Override
++    public String toString() {
++        return "ReservationDto{" +
++                "reservationId=" + reservationId +
++                ", dateOfReservation=" + dateOfReservation +
++                ", dateOfCheckIn=" + dateOfCheckIn +
++                ", dateOfCheckOut=" + dateOfCheckOut +
++                ", numberOfPersons=" + numberOfPersons +
++                ", roomNumber='" + roomNumber + '\'' +
++                ", price=" + price +
++                ", isVisible=" + isVisible +
++                '}';
++    }
++
++    @Override
++    public int compareTo(Object o) {
++        return 0;
++    }
++}
+Index: src/main/java/ro/fortech/academy/util/DBUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.util;\r\n\r\nimport java.sql.Connection;\r\nimport java.sql.DriverManager;\r\nimport java.sql.SQLException;\r\n\r\npublic class DBUtil {\r\n\r\n    public static void closeConnection(Connection connection) {\r\n        try {\r\n            if (connection != null) {\r\n                connection.close();\r\n            }\r\n        } catch (SQLException e) {\r\n            e.printStackTrace();\r\n        }\r\n    }\r\n    public static Connection getConnection() throws SQLException {\r\n        //        return DriverManager.getConnection(\"jdbc:postgresql://localhost:5432/project\", \"postgres\", \"root\");\r\n        return DriverManager.getConnection(\"jdbc:postgresql://localhost:5432/hotelmanagement\", \"postgres\", \"pIk4chu\");\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/util/DBUtil.java b/src/main/java/ro/fortech/academy/util/DBUtil.java
+--- a/src/main/java/ro/fortech/academy/util/DBUtil.java	(revision eafbde99d18106c4ba7fd04215869c6325d1d238)
++++ b/src/main/java/ro/fortech/academy/util/DBUtil.java	(date 1688918828976)
+@@ -17,6 +17,6 @@
+     }
+     public static Connection getConnection() throws SQLException {
+         //        return DriverManager.getConnection("jdbc:postgresql://localhost:5432/project", "postgres", "root");
+-        return DriverManager.getConnection("jdbc:postgresql://localhost:5432/hotelmanagement", "postgres", "pIk4chu");
++        return DriverManager.getConnection("jdbc:postgresql://localhost:5432/hotelmanagement", "postgres", "sergiu");
+     }
+ }
+Index: src/main/java/ro/fortech/academy/presentation/aggregator/AggregatorApp.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/presentation/aggregator/AggregatorApp.java b/src/main/java/ro/fortech/academy/presentation/aggregator/AggregatorApp.java
+new file mode 100644
+--- /dev/null	(date 1690476761075)
++++ b/src/main/java/ro/fortech/academy/presentation/aggregator/AggregatorApp.java	(date 1690476761075)
+@@ -0,0 +1,208 @@
++package ro.fortech.academy.presentation.aggregator;
++
++import ro.fortech.academy.business.services.*;
++import ro.fortech.academy.persistence.*;
++import ro.fortech.academy.presentation.customer.CustomerController;
++import ro.fortech.academy.presentation.customer.CustomerModel;
++import ro.fortech.academy.presentation.customer.CustomerView;
++import ro.fortech.academy.presentation.hotel.HotelController;
++import ro.fortech.academy.presentation.hotel.HotelModel;
++import ro.fortech.academy.presentation.hotel.HotelView;
++import ro.fortech.academy.presentation.payments.PaymentController;
++import ro.fortech.academy.presentation.payments.PaymentModel;
++import ro.fortech.academy.presentation.payments.PaymentView;
++import ro.fortech.academy.presentation.reservations.ReservationController;
++import ro.fortech.academy.presentation.reservations.ReservationModel;
++import ro.fortech.academy.presentation.reservations.ReservationView;
++import ro.fortech.academy.presentation.rooms.RoomController;
++import ro.fortech.academy.presentation.rooms.RoomModel;
++import ro.fortech.academy.presentation.rooms.RoomView;
++
++import javax.swing.*;
++import java.awt.*;
++
++public class AggregatorApp extends JFrame {
++    private HotelService hotelService;
++    private HotelController hotelController;
++    private HotelModel hotelModel;
++    private HotelView hotelView;
++    private RoomService roomService;
++    private RoomController roomController;
++    private RoomModel roomModel;
++    private RoomView roomView;
++    private ReservationService reservationService;
++    private ReservationController reservationController;
++    private ReservationModel reservationModel;
++    private ReservationView reservationView;
++    private CustomerService customerService;
++    private CustomerController customerController;
++    private CustomerModel customerModel;
++    private CustomerView customerView;
++    private PaymentService paymentService;
++    private PaymentController paymentController;
++    private PaymentModel paymentModel;
++    private PaymentView paymentView;
++
++    public void setPaymentView(PaymentView paymentView) {
++        this.paymentView = paymentView;
++    }
++
++    public void setPaymentModel(PaymentModel paymentModel) {
++        this.paymentModel = paymentModel;
++    }
++
++    public void setPaymentController(PaymentController paymentController) {
++        this.paymentController = paymentController;
++    }
++
++    public void setPaymentService(PaymentService paymentService) {
++        this.paymentService = paymentService;
++    }
++
++
++    public AggregatorApp() {
++        super("Main App");
++        JPanel content = new JPanel(new GridBagLayout());
++
++        // Set the application icon
++        ImageIcon mainAppIcon = new ImageIcon("src/resources/booking.png");
++        setIconImage(mainAppIcon.getImage());
++
++        // Create constraints for centering the image
++        GridBagConstraints imageConstraints = new GridBagConstraints();
++        imageConstraints.gridx = 0;
++        imageConstraints.gridy = 0;
++        imageConstraints.gridwidth = 3;
++        imageConstraints.insets = new Insets(10, 10, 10, 10);
++
++        // Create constraints for the buttons
++        GridBagConstraints buttonConstraints = new GridBagConstraints();
++        buttonConstraints.gridx = 0;
++        buttonConstraints.gridy = 1;
++        buttonConstraints.gridwidth = 1;
++        buttonConstraints.insets = new Insets(10, 10, 10, 10);
++
++        JButton hotelButton = createButton("To Hotel Menu");
++        JButton roomButton = createButton("To Rooms Menu");
++        JButton customerButton = createButton("To Customers Menu");
++        JButton reservationButton = createButton("To Reservations Menu");
++        JButton paymentButton = createButton("To Payments Menu");
++        JButton exitButton = createExitButton();
++
++        hotelButton.addActionListener(e -> showHotelView());
++        customerButton.addActionListener(e -> showCustomerView());
++        roomButton.addActionListener(e -> showRoomView());
++        reservationButton.addActionListener(e -> showReservationView());
++        paymentButton.addActionListener(e -> showPaymentView());
++        exitButton.addActionListener(e -> exitApplication());
++
++        ImageIcon imageIcon = new ImageIcon("src/resources/welcome-image.jpg");
++        JLabel imageLabel = new JLabel(imageIcon);
++
++        // Add the components to the content panel with their respective constraints
++        content.add(imageLabel, imageConstraints);
++        content.add(hotelButton, buttonConstraints);
++        buttonConstraints.gridx++;
++        content.add(roomButton, buttonConstraints);
++        buttonConstraints.gridx++;
++        content.add(customerButton, buttonConstraints);
++        buttonConstraints.gridx = 0;
++        buttonConstraints.gridy++;
++        content.add(reservationButton, buttonConstraints);
++        buttonConstraints.gridx++;
++        content.add(paymentButton, buttonConstraints);
++        buttonConstraints.gridx++;
++        content.add(exitButton, buttonConstraints);
++
++        this.add(content);
++        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
++        this.pack();
++        this.setLocationRelativeTo(null);
++        this.setVisible(true);
++    }
++
++    private JButton createButton(String label) {
++        JButton button = new JButton(label);
++        button.setPreferredSize(new Dimension(150, 50));
++        button.setFont(new Font("Arial", Font.PLAIN, 14));
++        button.setForeground(Color.WHITE);
++        button.setBackground(new Color(60, 141, 188)); // Custom background color
++        button.setBorder(BorderFactory.createLineBorder(new Color(44, 101, 144), 2)); // Custom border color and thickness
++        button.setFocusPainted(false); // Remove focus border
++        return button;
++    }
++
++    private JButton createExitButton() {
++        JButton exitButton = new JButton("Exit");
++        exitButton.setPreferredSize(new Dimension(150, 50));
++        exitButton.setFont(new Font("Arial", Font.PLAIN, 14));
++        exitButton.setForeground(Color.WHITE);
++        exitButton.setBackground(Color.RED); // Red background color for the exit button
++        exitButton.setBorder(BorderFactory.createLineBorder(new Color(144, 44, 44), 2)); // Custom border color and thickness
++        exitButton.setFocusPainted(false); // Remove focus border
++        return exitButton;
++    }
++
++    private void exitApplication() {
++        int response = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit the app?", "Exit Confirmation", JOptionPane.YES_NO_OPTION);
++        if (response == JOptionPane.YES_OPTION) {
++            System.exit(0);
++        }
++    }
++
++    private void showHotelView() {
++        hotelService = new HotelService(new HotelDaoPostgresImpl());
++        hotelModel = new HotelModel(hotelService.getAllHotels());
++        hotelView = new HotelView(hotelModel.getHotelList());
++        hotelController = new HotelController(hotelView, hotelModel, hotelService);
++        hotelView.setController(hotelController);
++        hotelView.setVisible(true);
++        this.dispose();
++    }
++
++    private void showRoomView() {
++        roomService = new RoomService(new RoomDAOPostgresImpl());
++        roomModel = new RoomModel(roomService.getRooms(), roomService.getAvailableRooms());
++        roomView = new RoomView(roomModel.getRoomList());
++        roomController = new RoomController(roomModel, roomView, roomService);
++        roomView.setController(roomController);
++        roomView.setVisible(true);
++        this.dispose();
++    }
++
++    private void showReservationView() {
++        reservationService = new ReservationService(new ReservationDAOPostgresImpl());
++        reservationModel = new ReservationModel(reservationService.getReservations(), reservationService.getReservationsDto());
++        reservationView = new ReservationView(reservationModel.getReservationList());
++        reservationController = new ReservationController(reservationModel, reservationView, reservationService);
++        reservationView.setController(reservationController);
++        reservationView.setVisible(true);
++        this.dispose();
++    }
++
++    private void showCustomerView() {
++        customerService = new CustomerService(new CustomerDAOPostgresImpl());
++        customerModel = new CustomerModel(customerService.getCustomers());
++        customerView = new CustomerView(customerModel.getCustomerList());
++        customerController = new CustomerController(customerModel, customerView, customerService);
++        customerView.setController(customerController);
++        customerView.setVisible(true);
++        this.dispose();
++    }
++
++    private void showPaymentView() {
++        paymentService = new PaymentService(new PaymentDAOPostgresImpl());
++        paymentModel = new PaymentModel(paymentService.getPayments());
++        paymentView = new PaymentView(paymentModel.getPaymentList());
++        paymentController = new PaymentController(paymentModel, paymentView, paymentService);
++        paymentView.setController(paymentController);
++        paymentView.setVisible(true);
++        this.dispose();
++//        setPaymentService(paymentService);
++//        setPaymentModel(paymentModel);
++//        setPaymentView(paymentView);
++//        setPaymentController(paymentController);
++//        paymentView.setController(paymentController);
++//        paymentView.setVisible(true);
++    }
++}

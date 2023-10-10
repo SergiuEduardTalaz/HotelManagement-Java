@@ -1,0 +1,18 @@
+Index: src/main/java/ro/fortech/academy/util/DBUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ro.fortech.academy.util;\r\n\r\nimport java.sql.Connection;\r\nimport java.sql.DriverManager;\r\nimport java.sql.SQLException;\r\n\r\npublic class DBUtil {\r\n\r\n    public static void closeConnection(Connection connection) {\r\n        try {\r\n            if (connection != null) {\r\n                connection.close();\r\n            }\r\n        } catch (SQLException e) {\r\n            e.printStackTrace();\r\n        }\r\n    }\r\n    public static Connection getConnection() throws SQLException {\r\n        //        return DriverManager.getConnection(\"jdbc:postgresql://localhost:5432/project\", \"postgres\", \"root\");\r\n        return DriverManager.getConnection(\"jdbc:postgresql://127.0.0.1:5432/academy\", \"postgres\", \"Vladinho27\");\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/ro/fortech/academy/util/DBUtil.java b/src/main/java/ro/fortech/academy/util/DBUtil.java
+--- a/src/main/java/ro/fortech/academy/util/DBUtil.java	(revision 6764ab117fcae23bd0ecdaee1e566b856281441d)
++++ b/src/main/java/ro/fortech/academy/util/DBUtil.java	(date 1690557107032)
+@@ -17,6 +17,6 @@
+     }
+     public static Connection getConnection() throws SQLException {
+         //        return DriverManager.getConnection("jdbc:postgresql://localhost:5432/project", "postgres", "root");
+-        return DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/academy", "postgres", "Vladinho27");
++        return DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/academy", "postgres", "sergiu");
+     }
+ }
